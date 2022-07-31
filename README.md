@@ -1,9 +1,11 @@
-== Build
+# Build
+```
 go test
 go build gpxdistance.go 
+```
 
-== Usage
-
+# Usage
+```
 Usage of gpxdistance: (--gpx FILE || --latitude LAT --longitude LON) [--links] GPXFILES... 
   -gpx string
         the gpx file (either specify --gpx or --latitude and --longitude)
@@ -22,3 +24,4 @@ Output: Distance to FILE/LAT+LON in meters;
         MIN LOT from FILE or LON;
         TIME from FILE or default
         [;link to GFILE;link to FILE/LAT+LON]
+```
