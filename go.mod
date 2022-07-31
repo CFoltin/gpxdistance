@@ -1,4 +1,4 @@
-module example.com/hello
+module docfoltin.de/gpxdistance
 
 go 1.18
 

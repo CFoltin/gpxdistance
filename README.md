@@ -1,3 +1,9 @@
+== Build
+go test
+go build gpxdistance.go 
+
+== Usage
+
 Usage of gpxdistance: (--gpx FILE || --latitude LAT --longitude LON) [--links] GPXFILES... 
   -gpx string
         the gpx file (either specify --gpx or --latitude and --longitude)
