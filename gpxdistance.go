@@ -36,7 +36,6 @@ func main() {
 	}
 	var mainPoints []*gpx.GPXPoint
 	if(flagset["gpx"]){
-		fmt.Printf("GPX: %s\n", *gpxFileName)
 		gpxFile, shouldReturn := parseFile(gpxFileName)
 		if shouldReturn {
 			return
