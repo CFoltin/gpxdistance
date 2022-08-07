@@ -7,6 +7,7 @@ import (
 	"log"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 		log.Fatal("Either --gpx or both --latitude and --longitude must be given")
 		return
 	}
-	var mainPoints []*gpx.GPXPoint
+	var mainPoints []gpx.GPXPoint
 	if(flagset["gpx"]){
 		gpxFile, shouldReturn := parseFile(gpxFileName)
 		if shouldReturn {
@@ -43,30 +44,32 @@ func main() {
 		mainPoints = getPointsFromFile(gpxFile)
 	} else {
 		basePoint := gpx.GPXPoint{Point: gpx.Point{Latitude: *latitude, Longitude: *longitude, Elevation: *gpx.NewNullableFloat64(0)}}
-		mainPoints = append(mainPoints, &basePoint)
+		mainPoints = append(mainPoints, basePoint)
 	}
 	
 	//printPoints(mainPoints)
 	for _, filename := range flag.Args() {
-		var filePoints [] *gpx.GPXPoint
+		var filePoints [] gpx.GPXPoint
 		newGpxFile, shouldReturn2 := parseFile(&filename)
 		if shouldReturn2 {
 			return
 		}
 		filePoints = getPointsFromFile(newGpxFile)
 		var min float64
-		var minPoint *gpx.GPXPoint
-		var minPoint2 *gpx.GPXPoint
+		var minLat1, minLon1, minLat2, minLon2 float64
+		var time1, time2 time.Time
 		min = 100000000.
-		minPoint = nil
-		minPoint2 = nil
 		for _, point := range filePoints {
 			for _, point2 := range mainPoints {
-				var dist = point.Distance2D(point2)
+				var dist = point.Distance2D(&point2)
 				if(dist < min){
 					min = dist
-					minPoint = point
-					minPoint2 = point2
+					minLat1 = point.Latitude
+					minLon1 = point.Longitude
+					time1 = point.Timestamp
+					minLat2 = point2.Latitude
+					minLon2 = point2.Longitude
+					time2 = point2.Timestamp
 				}
 			}				
 		}
@@ -75,23 +78,23 @@ func main() {
 		if(flagset["links"]){
 			var link string 
 			var link2 string
-			link = fmt.Sprintf("http://www.openstreetmap.org/?mlat=%f&mlon=%f&layers=M", minPoint.Latitude, minPoint.Longitude)
-			link2 = fmt.Sprintf("http://www.openstreetmap.org/?mlat=%f&mlon=%f&layers=M", minPoint2.Latitude, minPoint2.Longitude)
+			link = fmt.Sprintf("http://www.openstreetmap.org/?mlat=%f&mlon=%f&layers=M", minLat1, minLon1)
+			link2 = fmt.Sprintf("http://www.openstreetmap.org/?mlat=%f&mlon=%f&layers=M", minLat2, minLon2)
 			links = ";" + link + ";" + link2
 		} else {
 			links = ""
 		}
-		fmt.Printf("%.2f;%s;%f;%f;%s;%f;%f;%s%s\n", min, filename, minPoint.Latitude,minPoint.Longitude,minPoint.Timestamp.String(), minPoint2.Latitude,minPoint2.Longitude,minPoint2.Timestamp.String(), links)
+		fmt.Printf("%.2f;%s;%f;%f;%s;%f;%f;%s%s\n", min, filename, minLat1,minLon1, time1.String(), minLat2, minLon2,time2.String(), links)
 	}
 }
 
-func parseFile(jsonFileName *string) (*gpx.GPX, bool) {
-	jsonFile, err := os.Open(*jsonFileName)
+func parseFile(fileName *string) (*gpx.GPX, bool) {
+	file, err := os.Open(*fileName)
 	if err != nil {
 		log.Println(err)
 	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	defer file.Close()
+	byteValue, _ := ioutil.ReadAll(file)
 
 	gpxFile, err := gpx.ParseBytes(byteValue)
 	if err != nil {
@@ -108,12 +111,12 @@ func printPoints(mainPoints []*gpx.GPXPoint) {
 	}
 }
 
-func getPointsFromFile(gpxFile *gpx.GPX) ([]*gpx.GPXPoint) {
-	var points []*gpx.GPXPoint
+func getPointsFromFile(gpxFile *gpx.GPX) ([]gpx.GPXPoint) {
+	var points []gpx.GPXPoint
 	for _, track := range gpxFile.Tracks {
 		for _, segment := range track.Segments {
 			for _, point := range segment.Points {
-				points = append(points, &point)
+				points = append(points, point)
 			}
 		}
 	}
